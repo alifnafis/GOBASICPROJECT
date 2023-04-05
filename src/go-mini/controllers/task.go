@@ -3,6 +3,7 @@ package controllers
 import (
 	"Emc002/go-mini/models"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -85,6 +86,23 @@ func UpdateTask(c *gin.Context) {
 	db.Model(&task).Updates(updatedInput)
 
 	c.JSON(http.StatusOK, gin.H{"data": task})
+}
+
+func FilterTask(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+
+	assignedTo := c.Query("assignedTo")
+	if assignedTo == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "assignedTo parameter is required"})
+		return
+	}
+
+	assignedToList := strings.Split(assignedTo, ",")
+
+	var tasks []models.Task
+	db.Where("assinged_to IN (?)", assignedToList).Find(&tasks)
+
+	c.JSON(http.StatusOK, gin.H{"data": tasks})
 }
 
 func DeleteTask(c *gin.Context) {
